@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,17 +21,17 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<ItemDto> createItem(
-            @RequestBody @Valid Item item,
+            @RequestBody @Valid ItemDto itemDto,
             @RequestHeader("X-Sharer-User-Id") Long userId) {
-        log.info("Создание новой вещи: {}", item);
-        ItemDto createdItem = itemService.createItem(item, userId);
+        log.info("Создание новой вещи: {}", itemDto);
+        ItemDto createdItem = itemService.createItem(itemDto, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdItem);
     }
 
     @PatchMapping("/{itemId}")
     public ResponseEntity<ItemDto> updateItem(
             @PathVariable Long itemId,
-            @RequestBody @Valid ItemDto itemDto,
+            @RequestBody ItemDto itemDto,
             @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Редактирование вещи с ID {} пользователем с ID {}", itemId, userId);
         ItemDto updateItem = itemService.updateItem(itemId, itemDto, userId);

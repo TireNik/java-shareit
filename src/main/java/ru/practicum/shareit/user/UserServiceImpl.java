@@ -42,23 +42,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto updateUser(Long userId, User upUser) {
+    public UserDto updateUser(Long userId, UserDto upUserDto) {
         User user = getUserByIdEntity(userId);
-        if (upUser.getName() != null && !upUser.getName().isBlank()) {
-            user.setName(upUser.getName());
+        if (upUserDto.getName() != null && !upUserDto.getName().isBlank()) {
+            user.setName(upUserDto.getName());
         }
-        if (upUser.getEmail() != null && !upUser.getEmail().isBlank()) {
+        if (upUserDto.getEmail() != null && !upUserDto.getEmail().isBlank()) {
             Optional<User> existingUser = userRepository.findAll().stream()
-                    .filter(u -> u.getEmail().equals(upUser.getEmail()) && !u.getId().equals(userId))
+                    .filter(u -> u.getEmail().equals(upUserDto.getEmail()) && !u.getId().equals(userId))
                     .findFirst();
             if (existingUser.isPresent()) {
                 throw new ValidationException("Email уже используется другим пользователем");
             }
-            user.setEmail(upUser.getEmail());
+            user.setEmail(upUserDto.getEmail());
         }
         try {
             User updatedUser = userRepository.updateUser(user);
-            return userMapper.toDto(updatedUser); // Сохраняем изменения
+            return userMapper.toDto(updatedUser);
         } catch (Exception e) {
             log.info("updateUser ERROR", e.getMessage());
             throw new ValidationException("updateUser ERROR");
@@ -67,9 +67,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId) {
-        if (!userRepository.findById(userId).isPresent()) {
-            throw new NoSuchElementException("Пользователь с ID " + userId + " не найден");
-        }
+        getUserByIdEntity(userId);
         userRepository.deleteById(userId);
     }
 

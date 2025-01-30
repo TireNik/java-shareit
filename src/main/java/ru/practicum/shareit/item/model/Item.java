@@ -1,7 +1,5 @@
 package ru.practicum.shareit.item.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -16,11 +14,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {
     Long id;
-    @NotBlank
     String name;
-    @NotBlank
     String description;
-    @NotNull
     Boolean available;
     Long ownerId;
     Long requestId;

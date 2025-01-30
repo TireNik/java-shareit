@@ -33,21 +33,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto createItem(Item item, Long userId) {
+    public ItemDto createItem(ItemDto itemDto, Long userId) {
         if (userRepository.findById(userId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с ID " + userId + " не найден");
         }
+        Item item = itemMapper.toEntity(itemDto);
         item.setOwnerId(userId);
 
-        log.info("Сохраняем вещь: {} для пользователя с ID {}", item, userId);
-        Item savedItem = itemRepository.save(item);
-        return itemMapper.toDto(savedItem);
+        log.info("Сохраняем вещь: {} для пользователя с ID {}", itemDto, userId);
+        itemRepository.save(item);
+        return itemMapper.toDto(item);
     }
 
     @Override
     public ItemDto updateItem(Long itemId, ItemDto itemDto, Long userId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NoSuchElementException("Вещь с ID " + itemId + " не найдена"));
+        Item item = findAndCheckItem(itemId);
 
         if (!item.getOwnerId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Редактировать вещь может только её владелец");
@@ -65,14 +65,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NoSuchElementException("Вещь с ID " + itemId + " не найдена"));
+       Item item = findAndCheckItem(itemId);
         return itemMapper.toDto(item);
     }
 
+    private Item findAndCheckItem(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NoSuchElementException("Вещь с ID " + itemId + " не найдена"));
+    }
+
     @Override
-    public List<ItemDto> getItemsByOwner(Long itemId) {
-        List<Item> items = itemRepository.findAllByOwnerId(itemId);
+    public List<ItemDto> getItemsByOwner(Long userId) {
+        List<Item> items = itemRepository.findAllByOwnerId(userId);
         return items.stream()
                 .map(itemMapper::toDto)
                 .collect(Collectors.toList());
