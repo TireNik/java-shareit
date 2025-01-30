@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {
-    Long Id;
+    Long id;
     @NotBlank
     String name;
     @NotBlank
