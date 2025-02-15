@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentDtoOut;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import java.util.Collections;
@@ -64,5 +66,14 @@ public class ItemController {
         }
         List<ItemDto> items = itemService.searchItems(text);
         return ResponseEntity.ok(items);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public ResponseEntity<CommentDtoOut> createComment(
+            @RequestHeader ("X-Sharer-User-Id") Long userId,
+            @Valid @RequestBody CommentDto dto,
+            @PathVariable Long itemId) {
+        log.info("Добавление комментария к вещи {} пользователем {}", itemId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemService. createComment(userId, dto, itemId));
     }
 }

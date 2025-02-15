@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item;
+package ru.practicum.shareit.item.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -13,11 +13,6 @@ public class ItemMapper {
         itemDto.setAvailable(item.getAvailable());
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
-
-        if (item.getOwner() != null) {
-            itemDto.setOwnerId(item.getOwner().getId());
-        }
-
         return itemDto;
     }
 
