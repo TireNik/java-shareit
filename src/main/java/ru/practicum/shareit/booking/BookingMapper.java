@@ -23,14 +23,6 @@ public class BookingMapper {
         );
     }
 
-    public BookingDto toDto(Booking booking) {
-        return new BookingDto(
-                booking.getId(),
-                booking.getStart(),
-                booking.getEnd()
-        );
-    }
-
     public BookingDtoOut toBookingOut (Booking booking) {
         return new BookingDtoOut(
                 booking.getId(),
