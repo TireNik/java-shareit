@@ -23,7 +23,7 @@ public class BookingMapper {
         );
     }
 
-    public BookingDtoOut toBookingOut (Booking booking) {
+    public BookingDtoOut toBookingOut(Booking booking) {
         return new BookingDtoOut(
                 booking.getId(),
                 ItemMapper.toDto(booking.getItem()),

@@ -70,7 +70,7 @@ public class ItemController {
 
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<CommentDtoOut> createComment(
-            @RequestHeader ("X-Sharer-User-Id") Long userId,
+            @RequestHeader("X-Sharer-User-Id") Long userId,
             @Valid @RequestBody CommentDto dto,
             @PathVariable Long itemId) {
         log.info("Добавление комментария к вещи {} пользователем {}", itemId, userId);

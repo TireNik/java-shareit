@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class CommentDtoOut {
     Long id;
     String text;
-    String author;
+    String authorName;
     LocalDateTime created;
     Long itemId;
 }

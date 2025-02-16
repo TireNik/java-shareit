@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingDtoOut;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentDtoOut;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -60,21 +60,21 @@ public class ItemServiceImpl implements ItemService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Редактировать вещь может только её владелец");
         }
 
-        try {
-            objectMapper.updateValue(item, itemDto);
-        } catch (JsonMappingException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ошибка при обновлении данных вещи", e);
-        }
+        if (itemDto.getName() != null) item.setName(itemDto.getName());
+        if (itemDto.getDescription() != null) item.setDescription(itemDto.getDescription());
+        if (itemDto.getAvailable() != null) item.setAvailable(itemDto.getAvailable());
 
-        Item updateItem = itemRepository.save(item);
-        return ItemMapper.toDto(updateItem);
+        itemRepository.save(item);
+        return ItemMapper.toDto(item);
     }
 
     @Override
     public ItemDto getItemById(Long itemId) {
-       Item item = findAndCheckItem(itemId);
+        Item item = findAndCheckItem(itemId);
+        log.info("ВЕЩЩЩЩ {}", item);
+
         BookingDtoOut lastBooking = bookingRepository
-                .findTopByItemIdAndEndBeforeOrderByEndDesc(itemId, LocalDateTime.now())
+                .findTopByItemIdAndEndBeforeAndStatusOrderByEndDesc(itemId, LocalDateTime.now(), BookingStatus.APPROVED)
                 .map(BookingMapper::toBookingOut)
                 .orElse(null);
 
@@ -86,6 +86,9 @@ public class ItemServiceImpl implements ItemService {
         List<CommentDtoOut> comments = commentRepository.findAllByItemId(itemId).stream()
                 .map(CommentMapper::toDto)
                 .collect(Collectors.toList());
+
+        log.info("lastBooking: {}", lastBooking);
+        log.info("nextBooking: {}", nextBooking);
 
         return ItemMapper.toItemDtoOut(item, lastBooking, comments, nextBooking);
     }

@@ -27,7 +27,7 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
-    User author;
+    User authorName;
 
     @CreationTimestamp
     LocalDateTime created;
