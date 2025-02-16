@@ -74,6 +74,6 @@ public class ItemController {
             @Valid @RequestBody CommentDto dto,
             @PathVariable Long itemId) {
         log.info("Добавление комментария к вещи {} пользователем {}", itemId, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(itemService. createComment(userId, dto, itemId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createComment(userId, dto, itemId));
     }
 }

@@ -8,8 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.dto.BookingDtoOut;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentDtoOut;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -72,7 +73,21 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long itemId) {
        Item item = findAndCheckItem(itemId);
-        return ItemMapper.toDto(item);
+        BookingDtoOut lastBooking = bookingRepository
+                .findTopByItemIdAndEndBeforeOrderByEndDesc(itemId, LocalDateTime.now())
+                .map(BookingMapper::toBookingOut)
+                .orElse(null);
+
+        BookingDtoOut nextBooking = bookingRepository
+                .findTopByItemIdAndStartAfterOrderByStartAsc(itemId, LocalDateTime.now())
+                .map(BookingMapper::toBookingOut)
+                .orElse(null);
+
+        List<CommentDtoOut> comments = commentRepository.findAllByItemId(itemId).stream()
+                .map(CommentMapper::toDto)
+                .collect(Collectors.toList());
+
+        return ItemMapper.toItemDtoOut(item, lastBooking, comments, nextBooking);
     }
 
     private Item findAndCheckItem(Long itemId) {
@@ -100,6 +115,7 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public CommentDtoOut createComment(Long userId, CommentDto dto, Long itemId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
