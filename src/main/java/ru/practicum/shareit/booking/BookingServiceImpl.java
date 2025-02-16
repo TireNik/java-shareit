@@ -50,7 +50,7 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingOut(booking);
     }
 
-    private void bookingValid (BookingDto bookingDto, Long userId, Item item) {
+    private void bookingValid(BookingDto bookingDto, Long userId, Item item) {
         if (!item.getAvailable()) {
             throw new ValidationException("Бронирование вещи не доступно");
         }
