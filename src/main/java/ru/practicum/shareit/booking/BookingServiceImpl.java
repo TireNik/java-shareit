@@ -44,12 +44,12 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingOut(booking);
     }
 
-    private User findAndCheckUserById (Long userId) {
+    private User findAndCheckUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
     }
 
-    private Item itemFindAndCheck (Long itemId) {
+    private Item itemFindAndCheck(Long itemId) {
         return itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
     }
