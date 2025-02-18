@@ -16,7 +16,6 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
-import ru.practicum.shareit.user.UserService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,24 +29,34 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
-
 
     @Override
     @Transactional
     public BookingDtoOut createBooking(Long userId, BookingDto bookingDto) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
-        Item item = itemRepository.findById(bookingDto.getItemId())
-                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+        User user = findAndCheckUserById(userId);
+        Item item = itemFindAndCheck(bookingDto.getItemId());
         bookingValid(bookingDto, userId, item);
 
         Booking booking = BookingMapper.toEntity(bookingDto, item, user);
         booking = bookingRepository.save(booking);
-        log.info("ERROR {}", booking);
 
         return BookingMapper.toBookingOut(booking);
+    }
+
+    private User findAndCheckUserById (Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+    }
+
+    private Item itemFindAndCheck (Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+    }
+
+    private Booking bookingFindAndCheck(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new EntityNotFoundException("Бронирование с id " + bookingId + " не найдено"));
     }
 
     private void bookingValid(BookingDto bookingDto, Long userId, Item item) {
@@ -64,11 +73,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoOut confirmBooking(Long userId, Long bookingId, Boolean approved) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException("Бронирование не найдено"));
+        findAndCheckUserById(userId);
+        Booking booking = bookingFindAndCheck(bookingId);
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
             throw new ValidationException("Только владелец может подтвердить или отклонить бронирование");
+        }
+
+        if (!BookingStatus.WAITING.equals(booking.getStatus())) {
+            throw new ValidationException("Бронирование уже подтверждено или отклонено");
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
@@ -79,18 +92,21 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoOut getBooking(Long userId, Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException("Бронирование с id " + bookingId + " не найдено"));
+        findAndCheckUserById(userId);
 
-        if (!booking.getUser().getId().equals(userId) && !booking.getItem().getOwner().getId().equals(userId)) {
-            throw new ValidationException("У вас нет прав для просмотра этого бронирования");
+        Booking booking = bookingFindAndCheck(bookingId);
+
+        if (booking.getUser().getId().equals(userId) || booking.getItem().getOwner().getId().equals(userId)) {
+            return BookingMapper.toBookingOut(booking);
         }
 
-        return BookingMapper.toBookingOut(booking);
+        throw new ValidationException("У вас нет прав для просмотра этого бронирования");
     }
 
     @Override
     public List<BookingDtoOut> getAllBookings(Long userId, String state) {
+        findAndCheckUserById(userId);
+
         BookingStatus status = getBookingStatusFromState(state);
 
         List<Booking> bookings;
@@ -108,7 +124,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingDtoOut> getAllBookingsForOwner(Long userId, String state) {
-        userService.getUserById(userId);
+        findAndCheckUserById(userId);
 
         BookingStatus status = getBookingStatusFromState(state);
 

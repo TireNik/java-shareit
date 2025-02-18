@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingDtoOut;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentDtoOut;
@@ -24,8 +25,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,8 +41,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public ItemDto createItem(ItemDto itemDto, Long userId) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
+        User owner = findUserById(userId);
 
         Item item = ItemMapper.toEntity(itemDto, owner);
 
@@ -71,7 +70,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long itemId) {
         Item item = findAndCheckItem(itemId);
-        log.info("ВЕЩЩЩЩ {}", item);
 
         BookingDtoOut lastBooking = bookingRepository
                 .findTopByItemIdAndEndBeforeAndStatusOrderByEndDesc(itemId, LocalDateTime.now(), BookingStatus.APPROVED)
@@ -100,13 +98,54 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemsByOwner(Long userId) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
+        User owner = findUserById(userId);
 
         List<Item> items = itemRepository.findAllByOwner(owner);
-        return items.stream()
-                .map(ItemMapper::toDto)
+
+        if (items.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> itemIds = items.stream()
+                .map(Item::getId)
                 .collect(Collectors.toList());
+
+        List<Booking> bookings = bookingRepository.findAllByItemIdInAndStatusApproved(itemIds);
+
+        Map<Long, List<Booking>> bookingMap = bookings.stream()
+                .collect(Collectors.groupingBy(g -> g.getItem().getId()));
+
+        List<Comment> itemComments = commentRepository.findAllByItemIdIn(itemIds);
+
+        Map<Long, List<CommentDtoOut>> commentMap = itemComments.stream()
+                .collect(Collectors.groupingBy(c -> c.getItem().getId(),
+                        Collectors.mapping(CommentMapper::toDto, Collectors.toList())));
+
+        return items.stream()
+                .map(item -> {
+                    List<Booking> itemBookings = bookingMap.getOrDefault(item.getId(), Collections.emptyList());
+
+                    Optional<Booking> lastBookingOpt = itemBookings.stream()
+                            .filter(b -> b.getEnd().isBefore(LocalDateTime.now()))
+                            .reduce((first, second) -> second);
+
+                    Optional<Booking> nextBookingOpt = itemBookings.stream()
+                            .filter(b -> b.getStart().isAfter(LocalDateTime.now()))
+                            .findFirst();
+
+                    BookingDtoOut lastBooking = lastBookingOpt.map(BookingMapper::toBookingOut).orElse(null);
+                    BookingDtoOut nextBooking = nextBookingOpt.map(BookingMapper::toBookingOut).orElse(null);
+                    List<CommentDtoOut> comments = commentMap.getOrDefault(item.getId(), Collections.emptyList());
+
+                    ItemDto itemDto = ItemMapper.toItemDtoOut(item, lastBooking, comments, nextBooking);
+                    return itemDto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private User findUserById (Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
     }
 
     @Override
@@ -120,11 +159,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDtoOut createComment(Long userId, CommentDto dto, Long itemId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь не найден"));
+        User user = findUserById(userId);
 
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NoSuchElementException("Вещь с ID " + itemId + " не найдена"));
+        Item item = findAndCheckItem(itemId);
 
         boolean hasPastBooking = bookingRepository.existsByItemIdAndUserIdAndEndBefore(itemId, userId, LocalDateTime.now());
 
