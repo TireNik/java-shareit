@@ -1,68 +1,56 @@
 package ru.practicum.shareit.user;
 
 import jakarta.validation.ValidationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
-
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
 
     @Override
     public UserDto createUser(String name, String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new ValidationException("Пользователь с таким email уже существует");
+        }
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        try {
-            User savedUser = userRepository.save(user);
-            return userMapper.toDto(savedUser);
-        } catch (Exception e) {
-            log.info("createUser ERROR", e.getMessage());
-            throw new ValidationException("createUser ERROR");
-        }
+        User savedUser = userRepository.save(user);
+        return UserMapper.toDto(savedUser);
     }
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = getUserByIdEntity(userId);
-        return userMapper.toDto(user);
+        return userRepository.findById(userId)
+                .map(UserMapper::toDto)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
     }
 
     @Override
     public UserDto updateUser(Long userId, UserDto upUserDto) {
-        User user = getUserByIdEntity(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ValidationException("Пользователь не найден"));
+
         if (upUserDto.getName() != null && !upUserDto.getName().isBlank()) {
             user.setName(upUserDto.getName());
         }
         if (upUserDto.getEmail() != null && !upUserDto.getEmail().isBlank()) {
-            Optional<User> existingUser = userRepository.findAll().stream()
-                    .filter(u -> u.getEmail().equals(upUserDto.getEmail()) && !u.getId().equals(userId))
-                    .findFirst();
-            if (existingUser.isPresent()) {
+            if (userRepository.existsByEmail(upUserDto.getEmail())) {
                 throw new ValidationException("Email уже используется другим пользователем");
             }
             user.setEmail(upUserDto.getEmail());
         }
-        try {
-            User updatedUser = userRepository.updateUser(user);
-            return userMapper.toDto(updatedUser);
-        } catch (Exception e) {
-            log.info("updateUser ERROR", e.getMessage());
-            throw new ValidationException("updateUser ERROR");
-        }
+        return UserMapper.toDto(userRepository.save(user));
     }
 
     @Override
@@ -75,7 +63,7 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
-                .map(userMapper::toDto)
+                .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
 
