@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final ItemRequestRepository requestRepository;
@@ -146,8 +144,7 @@ public class ItemServiceImpl implements ItemService {
                     BookingDtoOut nextBooking = nextBookingOpt.map(BookingMapper::toBookingOut).orElse(null);
                     List<CommentDtoOut> comments = commentMap.getOrDefault(item.getId(), Collections.emptyList());
 
-                    ItemDto itemDto = ItemMapper.toItemDtoOut(item, lastBooking, comments, nextBooking);
-                    return itemDto;
+                    return ItemMapper.toItemDtoOut(item, lastBooking, comments, nextBooking);
                 })
                 .collect(Collectors.toList());
     }
