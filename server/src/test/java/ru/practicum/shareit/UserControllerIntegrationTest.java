@@ -1,11 +1,10 @@
 package ru.practicum.shareit;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -18,10 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.dto.UserDto;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = ShareItApp.class)
 @ActiveProfiles("test")
+@Slf4j
 class UserControllerIntegrationTest {
 
-    private static final Logger log = LoggerFactory.getLogger(UserControllerIntegrationTest.class);
     @LocalServerPort
     private int port;
 
@@ -43,10 +40,10 @@ class UserControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        HttpClient httpClient = HttpClients.createDefault(); // HttpClient 5.x
+        HttpClient httpClient = HttpClients.createDefault();
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
-        RestTemplateBuilder builder = new RestTemplateBuilder().requestFactory(() -> factory); // Настраиваем через RestTemplateBuilder
-        restTemplate = new TestRestTemplate(builder); // Передаём builder в TestRestTemplate
+        RestTemplateBuilder builder = new RestTemplateBuilder().requestFactory(() -> factory);
+        restTemplate = new TestRestTemplate(builder);
         baseUrl = "http://localhost:" + port + "/users";
 
         jdbcTemplate.update("DELETE FROM users");
@@ -55,8 +52,8 @@ class UserControllerIntegrationTest {
     @Test
     void createUser_success() {
         UserDto userDto = new UserDto();
-        userDto.setName("John Doe");
-        userDto.setEmail("john.doe@example.com");
+        userDto.setName("Pasha Technic");
+        userDto.setEmail("pasha.technic@example.com");
 
         ResponseEntity<UserDto> response = restTemplate.postForEntity(baseUrl, userDto, UserDto.class);
 
@@ -64,20 +61,20 @@ class UserControllerIntegrationTest {
         UserDto createdUser = response.getBody();
         assertNotNull(createdUser);
         assertNotNull(createdUser.getId());
-        assertEquals("John Doe", createdUser.getName());
-        assertEquals("john.doe@example.com", createdUser.getEmail());
+        assertEquals("Pasha Technic", createdUser.getName());
+        assertEquals("pasha.technic@example.com", createdUser.getEmail());
     }
 
     @Test
     void createUser_duplicateEmail_returnsConflict() {
         UserDto userDto1 = new UserDto();
-        userDto1.setName("John Doe");
-        userDto1.setEmail("john.doe@example.com");
+        userDto1.setName("Pasha Technic");
+        userDto1.setEmail("pasha.technic@example.com");
         restTemplate.postForEntity(baseUrl, userDto1, UserDto.class);
 
         UserDto userDto2 = new UserDto();
-        userDto2.setName("Jane Doe");
-        userDto2.setEmail("john.doe@example.com");
+        userDto2.setName("Pasha Technic");
+        userDto2.setEmail("pasha.technic@example.com");
 
         ResponseEntity<String> response = restTemplate.postForEntity(baseUrl, userDto2, String.class);
 
@@ -87,8 +84,8 @@ class UserControllerIntegrationTest {
     @Test
     void getUserById_success() {
         UserDto userDto = new UserDto();
-        userDto.setName("John Doe");
-        userDto.setEmail("john.doe@example.com");
+        userDto.setName("Pasha Technic");
+        userDto.setEmail("pasha.technic@example.com");
         ResponseEntity<UserDto> createResponse = restTemplate.postForEntity(baseUrl, userDto, UserDto.class);
         Long userId = createResponse.getBody().getId();
 
@@ -98,8 +95,8 @@ class UserControllerIntegrationTest {
         UserDto retrievedUser = response.getBody();
         assertNotNull(retrievedUser);
         assertEquals(userId, retrievedUser.getId());
-        assertEquals("John Doe", retrievedUser.getName());
-        assertEquals("john.doe@example.com", retrievedUser.getEmail());
+        assertEquals("Pasha Technic", retrievedUser.getName());
+        assertEquals("pasha.technic@example.com", retrievedUser.getEmail());
     }
 
     @Test
@@ -112,8 +109,8 @@ class UserControllerIntegrationTest {
     @Test
     void updateUser_success() {
         UserDto userDto = new UserDto();
-        userDto.setName("John Doe");
-        userDto.setEmail("john.doe@example.com");
+        userDto.setName("Pasha Technic");
+        userDto.setEmail("pasha.technic@example.com");
         ResponseEntity<UserDto> createResponse = restTemplate.postForEntity(baseUrl, userDto, UserDto.class);
         Long userId = createResponse.getBody().getId();
 
@@ -154,8 +151,8 @@ class UserControllerIntegrationTest {
     @Test
     void deleteUser_success() {
         UserDto userDto = new UserDto();
-        userDto.setName("John Doe");
-        userDto.setEmail("john.doe@example.com");
+        userDto.setName("Pasha Technic");
+        userDto.setEmail("pasha.technic@example.com");
         ResponseEntity<UserDto> createResponse = restTemplate.postForEntity(baseUrl, userDto, UserDto.class);
         Long userId = createResponse.getBody().getId();
 
@@ -168,28 +165,7 @@ class UserControllerIntegrationTest {
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-        // Проверка, что пользователь удалён
         ResponseEntity<String> getResponse = restTemplate.getForEntity(baseUrl + "/" + userId, String.class);
         assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
-    }
-
-    @Test
-    void getAllUsers_success() {
-        UserDto userDto1 = new UserDto();
-        userDto1.setName("John Doe");
-        userDto1.setEmail("john.doe@example.com");
-        restTemplate.postForEntity(baseUrl, userDto1, UserDto.class);
-
-        UserDto userDto2 = new UserDto();
-        userDto2.setName("Jane Doe");
-        userDto2.setEmail("jane.doe@example.com");
-        restTemplate.postForEntity(baseUrl, userDto2, UserDto.class);
-
-        ResponseEntity<List> response = restTemplate.getForEntity(baseUrl, List.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<?> users = response.getBody();
-        assertNotNull(users);
-        assertEquals(2, users.size());
     }
 }

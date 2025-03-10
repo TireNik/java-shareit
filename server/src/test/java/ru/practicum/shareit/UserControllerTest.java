@@ -1,3 +1,5 @@
+package ru.practicum.shareit;
+
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +38,8 @@ class UserControllerTest {
     void setUp() {
         userDto = new UserDto();
         userDto.setId(1l);
-        userDto.setName("John Doe");
-        userDto.setEmail("john.doe@example.com");
+        userDto.setName("Pasha Technic");
+        userDto.setEmail("pasha.technic@example.com");
     }
 
     @Test
@@ -48,7 +50,7 @@ class UserControllerTest {
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(userDto, response.getBody());
-        verify(userService, times(1)).createUser("John Doe", "john.doe@example.com");
+        verify(userService, times(1)).createUser("Pasha Technic", "pasha.technic@example.com");
     }
 
     @Test
@@ -61,7 +63,7 @@ class UserControllerTest {
         });
 
         assertEquals("Пользователь с таким email уже существует", exception.getMessage());
-        verify(userService, times(1)).createUser("John Doe", "john.doe@example.com");
+        verify(userService, times(1)).createUser("Pasha Technic", "pasha.technic@example.com");
     }
 
     @Test
