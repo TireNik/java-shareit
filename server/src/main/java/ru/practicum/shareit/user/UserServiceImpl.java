@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
@@ -23,7 +24,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(String name, String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new ValidationException("Пользователь с таким email уже существует");
+            throw new EmailException("Пользователь с таким email уже существует");
         }
         User user = new User();
         user.setName(name);
@@ -49,7 +50,7 @@ public class UserServiceImpl implements UserService {
         }
         if (upUserDto.getEmail() != null && !upUserDto.getEmail().isBlank()) {
             if (userRepository.existsByEmail(upUserDto.getEmail())) {
-                throw new ValidationException("Email уже используется другим пользователем");
+                throw new EmailException("Email уже используется другим пользователем");
             }
             user.setEmail(upUserDto.getEmail());
         }
