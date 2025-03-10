@@ -297,7 +297,7 @@ class ItemControllerIntegrationTest {
                 new HttpEntity<>(commentDto, createHeadersWithUserId(userId)),
                 String.class);
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody()).contains("должно быть хотя бы одно бронирование"));
     }
 

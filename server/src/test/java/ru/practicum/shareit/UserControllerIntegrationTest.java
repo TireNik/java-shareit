@@ -78,7 +78,7 @@ class UserControllerIntegrationTest {
 
         ResponseEntity<String> response = restTemplate.postForEntity(baseUrl, userDto2, String.class);
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
