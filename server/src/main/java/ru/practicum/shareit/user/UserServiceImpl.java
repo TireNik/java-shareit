@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user;
 
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,7 +11,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
 
 @Service

@@ -37,7 +37,7 @@ class UserControllerTest {
     @BeforeEach
     void setUp() {
         userDto = new UserDto();
-        userDto.setId(1l);
+        userDto.setId(1L);
         userDto.setName("Pasha Technic");
         userDto.setEmail("pasha.technic@example.com");
     }

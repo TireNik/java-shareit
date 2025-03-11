@@ -52,7 +52,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         findUserById(userId);
 
         ItemRequest itemRequest = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Запрос с id:" + requestId + "не найден"));
+                .orElseThrow(() -> new NotFoundException("Запрос с id:" + requestId + " не найден"));
 
         ItemRequestDto dto = RequestMapper.toDto(itemRequest);
         return dto;
