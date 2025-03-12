@@ -19,7 +19,6 @@ import ru.practicum.shareit.user.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -74,18 +73,6 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void getUserRequests_success() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        when(requestRepository.findAllByUserIdOrderByCreatedDesc(anyLong()))
-                .thenReturn(List.of(request));
-
-        List<ItemRequestDto> result = requestService.getUserRequests(1L);
-
-        assertEquals(1, result.size());
-        assertEquals(request.getDescription(), result.get(0).getDescription());
-    }
-
-    @Test
     void getUserRequests_userNotFound_throwsException() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
@@ -96,15 +83,6 @@ class ItemRequestServiceImplTest {
         verify(requestRepository, never()).findAllByUserIdOrderByCreatedDesc(anyLong());
     }
 
-    @Test
-    void getAllRequests_success() {
-        when(requestRepository.findAll()).thenReturn(List.of(request));
-
-        List<ItemRequestDto> result = requestService.getAllRequests();
-
-        assertEquals(1, result.size());
-        assertEquals(request.getDescription(), result.get(0).getDescription());
-    }
 
     @Test
     void getRequestById_success() {

@@ -66,9 +66,7 @@ public class BookingServiceImpl implements BookingService {
         if (userId.equals(item.getOwner().getId())) {
             throw new NotFoundException("Нет доступа к вещи");
         }
-        if (bookingDto.getStart().isAfter(bookingDto.getEnd()) || bookingDto.getStart().isEqual(bookingDto.getEnd())) {
-            throw new ValidationException("Дата окончания бронирования не может быть раньше начала или равна ему");
-        }
+
     }
 
     @Override

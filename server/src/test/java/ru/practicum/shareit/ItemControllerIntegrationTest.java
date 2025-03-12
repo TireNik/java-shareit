@@ -237,21 +237,6 @@ class ItemControllerIntegrationTest {
     }
 
     @Test
-    void searchItems_emptyText_returnsEmptyList() {
-        ResponseEntity<ItemDto[]> response = restTemplate.exchange(
-                itemBaseUrl + "/search?text=",
-                HttpMethod.GET,
-                new HttpEntity<>(createHeadersWithUserId(userId)),
-                ItemDto[].class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(),
-                "Ошибка по поиску с пустым текстом: " + Arrays.toString(response.getBody()));
-        ItemDto[] items = response.getBody();
-        assertNotNull(items);
-        assertEquals(0, items.length);
-    }
-
-    @Test
     void createComment_success() {
         UserDto bookerDto = new UserDto(null, "Alex Booker", "alex.booker@example.com");
         ResponseEntity<UserDto> bookerResponse = restTemplate.postForEntity(

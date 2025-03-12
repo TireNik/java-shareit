@@ -10,7 +10,6 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentDtoOut;
 import ru.practicum.shareit.item.dto.ItemDto;
 
-import java.util.Collections;
 import java.util.List;
 
 
@@ -61,9 +60,6 @@ public class ItemController {
             @RequestParam String text,
             @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Поиск вещей с текстом '{}' пользователем с ID {}", text, userId);
-        if (text.isBlank()) {
-            return ResponseEntity.ok(Collections.emptyList());
-        }
         List<ItemDto> items = itemService.searchItems(text);
         return ResponseEntity.ok(items);
     }

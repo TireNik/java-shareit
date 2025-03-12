@@ -35,8 +35,8 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<ItemRequestDto>> getAllRequests() {
-        List<ItemRequestDto> itemRequests = requestService.getAllRequests();
+    public ResponseEntity<List<ItemRequestDto>> getAllRequests(@RequestHeader("X-Sharer-User-Id") Long userId) {
+        List<ItemRequestDto> itemRequests = requestService.getAllRequests(userId);
         return ResponseEntity.ok(itemRequests);
     }
 
