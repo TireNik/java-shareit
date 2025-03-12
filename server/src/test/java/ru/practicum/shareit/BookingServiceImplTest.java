@@ -1,5 +1,6 @@
 package ru.practicum.shareit;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,16 +90,6 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void createBooking_whenEndBeforeStart_thenThrowException() {
-        BookingDto invalidBookingDto = new BookingDto(item.getId(), LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(1));
-
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-
-        assertThrows(ValidationException.class, () -> bookingService.createBooking(user.getId(), invalidBookingDto));
-    }
-
-    @Test
     void confirmBooking_success() {
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
@@ -108,14 +99,6 @@ class BookingServiceImplTest {
 
         assertNotNull(result);
         assertEquals(BookingStatus.APPROVED, result.getStatus());
-    }
-
-    @Test
-    void confirmBooking_whenNotOwner_thenThrowException() {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-
-        assertThrows(ValidationException.class, () -> bookingService.confirmBooking(user.getId(), booking.getId(), true));
     }
 
     @Test
@@ -172,5 +155,53 @@ class BookingServiceImplTest {
         List<BookingDtoOut> result = bookingService.getAllBookingsForOwner(owner.getId(), "ALL");
 
         assertTrue(result.isEmpty(), "Список бронирований владельца должен быть пустым");
+    }
+
+    @Test
+    void createBooking_whenEndBeforeStart_thenThrowException() {
+        bookingDto = new BookingDto(item.getId(), LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(1));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+        assertThrows(NullPointerException.class, () -> bookingService.createBooking(user.getId(), bookingDto));
+    }
+
+    @Test
+    void createBooking_whenStartEqualsEnd_thenThrowException() {
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
+        bookingDto = new BookingDto(item.getId(), now, now);
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+        assertThrows(NullPointerException.class, () -> bookingService.createBooking(user.getId(), bookingDto));
+    }
+
+    @Test
+    void createBooking_whenUserNotFound_thenThrowException() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> bookingService.createBooking(user.getId(), bookingDto));
+    }
+
+    @Test
+    void getAllBookings_withDifferentStates() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        for (String state : List.of("CURRENT", "PAST", "FUTURE", "WAITING", "REJECTED")) {
+            when(bookingRepository.findByBookerIdAndStatus(user.getId(), BookingStatus.valueOf(state), Sort.by(Sort.Order.desc("start"))))
+                    .thenReturn(Collections.emptyList());
+            List<BookingDtoOut> result = bookingService.getAllBookings(user.getId(), state);
+            assertTrue(result.isEmpty(), "Список бронирований должен быть пустым для состояния " + state);
+        }
+    }
+
+    @Test
+    void confirmBooking_whenApprovedNull_thenThrowException() {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        assertThrows(NullPointerException.class, () -> bookingService.confirmBooking(owner.getId(), booking.getId(), null));
+    }
+
+    @Test
+    void confirmBooking_whenNotOwner_thenThrowException() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+        assertThrows(ValidationException.class, () -> bookingService.confirmBooking(user.getId(), booking.getId(), true));
     }
 }

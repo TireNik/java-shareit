@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
+import java.util.Collections;
+
 @Controller
 @RequestMapping(path = "/items")
 @RequiredArgsConstructor
@@ -57,6 +59,9 @@ public class ItemController {
             @RequestParam("text") String text,
             @RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
         log.info("Поиск вещей с текстом '{}' пользователем с ID {}", text, userId);
+        if (text.isBlank()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
         return itemClient.search(userId, text);
     }
 

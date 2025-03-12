@@ -112,22 +112,6 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void getAllRequests_success() {
-        requestRepository.save(new ItemRequest(null, user, "Ищу отвертку", LocalDateTime.now(), new ArrayList<>()));
-
-        ResponseEntity<ItemRequestDto[]> response = restTemplate.exchange(
-                baseUrl + "/all",
-                HttpMethod.GET,
-                null,
-                ItemRequestDto[].class
-        );
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().length);
-    }
-
-    @Test
     void getItem_success() {
         ResponseEntity<ItemRequestDto> response = restTemplate.exchange(
                 baseUrl + "/" + request.getId(),

@@ -18,7 +18,6 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -110,14 +109,6 @@ class ItemControllerTest {
         verify(itemService, times(1)).searchItems("text");
     }
 
-    @Test
-    void searchItems_emptyText() {
-        ResponseEntity<List<ItemDto>> response = itemController.searchItems("", 1L);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(0, Objects.requireNonNull(response.getBody()).size());
-        verify(itemService, times(0)).searchItems(anyString());
-    }
 
     @Test
     void createComment_success() {

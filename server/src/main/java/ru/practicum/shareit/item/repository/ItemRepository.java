@@ -16,6 +16,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT i FROM Item i WHERE LOWER(i.name) LIKE %:txt% OR LOWER(i.description) LIKE %:txt%")
     List<Item> searchItemsByTxt(@Param("txt") String txt);
 
-    @Query("SELECT i FROM Item i WHERE i.request.id IN :requestId")
-    List<Item> findByRequestIds(@Param("requestId") Long requestId);
+    @Query("SELECT i FROM Item i WHERE i.request.id IN :requestIds")
+    List<Item> findByRequestIds(@Param("requestIds") List<Long> requestIds);
 }

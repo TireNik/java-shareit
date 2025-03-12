@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class BookingController {
     public ResponseEntity<Object> bookItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                            @RequestBody @Valid BookItemRequestDto requestDto) {
         log.info("Creating booking {}, userId={}", requestDto, userId);
+        bookinValid(requestDto);
         return bookingClient.bookItem(userId, requestDto);
     }
 
@@ -65,5 +67,11 @@ public class BookingController {
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
         return bookingClient.getAllBookingsForOwner(userId, bookingState);
+    }
+
+    private void bookinValid(BookItemRequestDto dto) {
+        if (dto.getStart().isAfter(dto.getEnd()) || dto.getStart().isEqual(dto.getEnd())) {
+            throw new ValidationException("Дата окончания бронирования не может быть раньше начала или равна ему");
+        }
     }
 }
